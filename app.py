@@ -1,17 +1,17 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import numpy as np
 
 st.set_page_config(page_title="Customer Churn Predictor", layout="wide")
 st.title("📊 Customer Churn Prediction App")
 
-# Load model
 model = joblib.load("customer_churn_model.pkl")
 
 st.sidebar.header("Instructions")
 st.sidebar.write("""
 1. Upload your CSV file  
-2. The model will predict churn probability for each record  
+2. The model will predict churn/sales for each record  
 3. Download the predictions as a CSV
 """)
 
@@ -22,21 +22,24 @@ if uploaded_file:
     st.write("✅ Data preview:")
     st.dataframe(data.head())
 
-    preds = model.predict(data)
-    data["Predicted_Churn"] = preds
+    # 🔧 Convert object columns to category codes (same as training)
+    for col in data.select_dtypes("object").columns:
+        data[col] = data[col].astype("category").cat.codes
 
-    st.subheader("🔮 Predictions (Top 20)")
-    st.dataframe(data.head(20))
+    # 🔧 Force all to numeric
+    data = data.apply(pd.to_numeric, errors="coerce").fillna(0)
 
-    csv = data.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Download predictions", csv, "predicted_churn.csv", "text/csv")
-
-    # Optional: show saved metrics
+    # 🔧 Predict safely
     try:
-        metrics = pd.read_csv("customer_churn_metrics.csv")
-        st.markdown("### 📈 Model Performance")
-        st.dataframe(metrics)
-    except Exception:
-        st.info("Metrics file not found.")
+        preds = model.predict(data)
+        data["Predicted_Churn"] = preds
+        st.subheader("🔮 Predictions (Top 20)")
+        st.dataframe(data.head(20))
+
+        csv = data.to_csv(index=False).encode("utf-8")
+        st.download_button("📥 Download predictions", csv, "predicted_churn.csv", "text/csv")
+    except Exception as e:
+        st.error("⚠️ Prediction failed — check input format.")
+        st.code(str(e))
 else:
     st.info("Upload a CSV file to start prediction.")
