@@ -170,7 +170,61 @@ if uploaded_file is not None:
                 color_continuous_scale="tealrose",
             )
             st.plotly_chart(churn_bar, use_container_width=True)
+                # -------------------------------
+        # 💬 CUSTOMER INSIGHTS SECTION
+        # -------------------------------
+        st.markdown("---")
+        st.markdown("## 💡 Customer Insights & Recommendations")
 
+        # Hard-coded possible reasons for churn and positives
+        churn_reasons = [
+            "High subscription or product pricing",
+            "Poor customer service experience",
+            "Limited product variety or outdated features",
+            "Slow delivery or inconsistent availability",
+            "Lack of loyalty rewards or engagement"
+        ]
+
+        customer_loves = [
+            "Fast delivery and availability",
+            "Responsive customer support",
+            "Product quality and reliability",
+            "Loyalty points or cashback offers",
+            "User-friendly website and app experience"
+        ]
+
+        improvement_suggestions = [
+            "Offer discounts or tiered pricing for long-term customers",
+            "Introduce referral and reward programs",
+            "Personalise email campaigns with tailored offers",
+            "Improve delivery timelines and return handling",
+            "Collect post-purchase feedback for continuous improvement"
+        ]
+
+        st.subheader("📉 Why Customers May Churn")
+        selected_reason = st.selectbox(
+            "Select a possible churn reason:",
+            churn_reasons,
+            index=0
+        )
+        st.info(f"**Insight:** Customers often churn due to _{selected_reason}_. Consider addressing this area to improve retention.")
+
+        st.subheader("💖 What Customers Love")
+        selected_love = st.selectbox(
+            "Select what customers appreciate the most:",
+            customer_loves,
+            index=0
+        )
+        st.success(f"**Highlight:** Customers value _{selected_love}_. Keep strengthening this advantage!")
+
+        st.subheader("🛠️ Suggestions to Improve Retention")
+        selected_suggestion = st.selectbox(
+            "Select a strategy to reduce churn:",
+            improvement_suggestions,
+            index=0
+        )
+        st.warning(f"**Action Plan:** {selected_suggestion}")
+   
         # -------------------------------
         # 💾 DOWNLOAD
         # -------------------------------
