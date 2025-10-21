@@ -126,7 +126,9 @@ if uploaded_file is not None:
         preds = model.predict(data)
 
         data["Predicted_Churn"] = preds
-        churn_rate = np.mean(preds)
+        # Scale predictions between 0–1
+        churn_rate = np.mean(preds / np.max(preds))
+
 
         st.markdown("---")
         st.markdown(f"<h2>📈 Overall Predicted Churn Rate: <span style='color:#00FFFF;'>{churn_rate:.2%}</span></h2>", unsafe_allow_html=True)
