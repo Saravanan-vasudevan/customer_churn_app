@@ -1,0 +1,30 @@
+name: Streamlit App CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Lint & Test Import
+      run: |
+        python -m compileall .
+
+    - name: Notify Streamlit Cloud
+      run: |
+        echo "✅ Code built successfully. Streamlit Cloud will automatically rebuild on push."
