@@ -8,48 +8,74 @@ import lightgbm as lgb
 # 🎨 PAGE CONFIG
 # -------------------------------
 st.set_page_config(
-    page_title="Customer Churn Prediction App",
-    page_icon="📊",
+    page_title="Customer Churn Prediction Dashboard",
+    page_icon="🚀",
     layout="wide",
 )
 
 # -------------------------------
-# ✨ CUSTOM CSS (modern glass look)
+# 💅 CUSTOM CSS (modern gradient + glow)
 # -------------------------------
 st.markdown("""
     <style>
     body {
-        background-color: #0e1117;
-        color: #fff;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #ffffff;
+        font-family: 'Segoe UI', sans-serif;
     }
     .main {
-        background: rgba(255,255,255,0.05);
-        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        backdrop-filter: blur(6.3px);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(6px);
         border: 1px solid rgba(255, 255, 255, 0.15);
     }
-    h1, h2, h3 {
-        color: #00ADB5;
+    h1 {
         text-align: center;
-        font-weight: 700;
+        color: #00FFFF;
+        text-shadow: 0 0 15px #00FFFF;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+    h2, h3 {
+        color: #FFD369;
+        text-align: center;
     }
     .stButton>button {
-        background-color: #00ADB5;
+        background: linear-gradient(90deg, #00ADB5, #007a80);
         color: white;
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
         border: none;
-        font-weight: bold;
-        transition: all 0.3s ease;
+        padding: 0.6rem 1.4rem;
+        font-weight: 600;
+        transition: all 0.3s ease-in-out;
     }
     .stButton>button:hover {
-        background-color: #007a80;
         transform: scale(1.05);
+        background: linear-gradient(90deg, #00ffff, #00b4d8);
+        color: black;
+        font-weight: 700;
     }
-    footer {
-        visibility: hidden;
+    .footer {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .social-icons {
+        margin-top: 0.5rem;
+    }
+    .icon {
+        margin: 0 10px;
+        text-decoration: none;
+        color: white;
+        font-size: 1.2rem;
+        transition: 0.3s;
+    }
+    .icon:hover {
+        color: #00FFFF;
+        text-shadow: 0 0 10px #00FFFF;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -62,18 +88,18 @@ model = joblib.load("customer_churn_model.pkl")
 # -------------------------------
 # 🏷️ APP TITLE
 # -------------------------------
-st.title("📊 Customer Churn Prediction App")
-st.subheader("Upload customer data and predict churn probability")
+st.title("🚀 Customer Churn Prediction Dashboard")
+st.markdown("<h3 style='text-align:center;'>Predict churn and visualise customer insights</h3>", unsafe_allow_html=True)
+st.markdown("---")
 
 # -------------------------------
 # 📂 UPLOAD SECTION
 # -------------------------------
-uploaded_file = st.file_uploader("📁 Upload your CSV file", type=["csv"])
+uploaded_file = st.file_uploader("📁 Upload your CSV file to begin:", type=["csv"])
 
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
-    st.markdown("✅ **Data uploaded successfully!**")
-    
+    st.success("✅ Data uploaded successfully!")
     st.dataframe(data.head(), use_container_width=True)
 
     # -------------------------------
@@ -83,10 +109,9 @@ if uploaded_file is not None:
         preds = model.predict(data)
         data["Predicted_Churn"] = preds
 
-        # 🧾 METRICS SUMMARY
         churn_rate = np.mean(preds)
         st.markdown("---")
-        st.markdown(f"### ⚙️ Overall Predicted Churn Rate: **{churn_rate:.2%}**")
+        st.markdown(f"<h2>📈 Overall Predicted Churn Rate: <span style='color:#00FFFF;'>{churn_rate:.2%}</span></h2>", unsafe_allow_html=True)
 
         st.download_button(
             label="📥 Download Predictions as CSV",
@@ -94,7 +119,6 @@ if uploaded_file is not None:
             file_name="predicted_churn.csv",
             mime="text/csv",
         )
-
         st.success("✅ Predictions generated successfully!")
 
     except Exception as e:
@@ -102,16 +126,18 @@ if uploaded_file is not None:
         st.exception(e)
 
 else:
-    st.info("📤 Upload a CSV file to begin.")
+    st.info("💡 Upload a CSV file to start predictions.")
 
 # -------------------------------
-# 🧾 FOOTER
+# 🌐 SOCIAL FOOTER WITH LINKS
 # -------------------------------
 st.markdown("""
-<hr>
-<div style='text-align:center;'>
-    Made with ❤️ by <b>Saravanan Vasudevan</b>  
-    <br>
-    MSc Data Science & Analytics | Cardiff University
+<div class="footer">
+    <p>Made with ❤️ by <b>Saravanan Vasudevan</b><br>
+    MSc Data Science & Analytics | Cardiff University</p>
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/saravanan-vasudevan" target="_blank" class="icon">🔗 LinkedIn</a>
+        <a href="https://twitter.com/" target="_blank" class="icon">❌ X</a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
