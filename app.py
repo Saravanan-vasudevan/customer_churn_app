@@ -102,14 +102,12 @@ if uploaded_file is not None:
     st.success("✅ Data uploaded successfully!")
     st.dataframe(data.head(), use_container_width=True)
 
-    # -------------------------------
-    # 🧠 MAKE PREDICTIONS (with column alignment)
+       # -------------------------------
+    # 🧠 MAKE PREDICTIONS (with insights)
     # -------------------------------
     try:
-        # ✅ Load reference columns from model metadata if saved (or set manually)
         expected_features = list(model.feature_name())
 
-        # ✅ Align incoming data to match training columns only
         missing_cols = [col for col in expected_features if col not in data.columns]
         extra_cols = [col for col in data.columns if col not in expected_features]
 
@@ -117,33 +115,78 @@ if uploaded_file is not None:
             st.warning(f"⚠️ Ignoring {len(extra_cols)} extra columns not seen during training: {extra_cols}")
 
         for col in missing_cols:
-            data[col] = 0  # fill missing with zero safely
+            data[col] = 0
 
-        # Keep only expected features in same order
         data = data[expected_features]
-
-        # 🔮 Predict safely
         preds = model.predict(data)
 
-        data["Predicted_Churn"] = preds
-        # Scale predictions between 0–1
-        churn_rate = np.mean(preds / np.max(preds))
+        # Normalise for display
+        data["Predicted_Churn_Prob"] = preds / np.max(preds)
 
+        # Threshold (consider churn if prob > 0.5)
+        data["Churned"] = (data["Predicted_Churn_Prob"] > 0.5).astype(int)
+
+        churn_rate = data["Churned"].mean() * 100
+        total_customers = len(data)
+        churned_customers = data["Churned"].sum()
+        retained_customers = total_customers - churned_customers
+
+        # -------------------------------
+        # 🎯 KPI METRICS
+        # -------------------------------
+        st.markdown("### 📊 Key Insights")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Customers", f"{total_customers:,}")
+        col2.metric("Churned Customers", f"{churned_customers:,}")
+        col3.metric("Churn Rate", f"{churn_rate:.2f}%")
 
         st.markdown("---")
-        st.markdown(f"<h2>📈 Overall Predicted Churn Rate: <span style='color:#00FFFF;'>{churn_rate:.2%}</span></h2>", unsafe_allow_html=True)
 
+        # -------------------------------
+        # 🥧 PIE CHART
+        # -------------------------------
+        import plotly.express as px
+        churn_pie = px.pie(
+            values=[churned_customers, retained_customers],
+            names=["Churned", "Retained"],
+            color_discrete_sequence=["#ff4d4d", "#00cc99"],
+            title="Customer Churn vs Retention",
+        )
+        st.plotly_chart(churn_pie, use_container_width=True)
+
+        # -------------------------------
+        # 📈 BAR CHART (if columns exist)
+        # -------------------------------
+        possible_cols = [c for c in data.columns if data[c].nunique() < 20 and c not in ["Churned", "Predicted_Churn_Prob"]]
+        if possible_cols:
+            col_select = st.selectbox("📌 Select a feature to analyse churn distribution:", possible_cols)
+            churn_by_feature = data.groupby(col_select)["Churned"].mean().reset_index()
+            churn_bar = px.bar(
+                churn_by_feature,
+                x=col_select,
+                y="Churned",
+                color="Churned",
+                title=f"Churn Rate by {col_select}",
+                color_continuous_scale="tealrose",
+            )
+            st.plotly_chart(churn_bar, use_container_width=True)
+
+        # -------------------------------
+        # 💾 DOWNLOAD
+        # -------------------------------
         st.download_button(
-            label="📥 Download Predictions as CSV",
+            label="📥 Download Predictions & Insights CSV",
             data=data.to_csv(index=False).encode("utf-8"),
-            file_name="predicted_churn.csv",
+            file_name="predicted_churn_with_insights.csv",
             mime="text/csv",
         )
-        st.success("✅ Predictions generated successfully!")
+
+        st.success("✅ Predictions and insights generated successfully!")
 
     except Exception as e:
         st.error("⚠️ Prediction failed — check input format or missing columns.")
         st.exception(e)
+
 
 
 else:
