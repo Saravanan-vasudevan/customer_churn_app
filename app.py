@@ -1,12 +1,19 @@
 import streamlit as st
 import pandas as pd
 import joblib
-import numpy as np
 
 st.set_page_config(page_title="Customer Churn Predictor", layout="wide")
 st.title("📊 Customer Churn Prediction App")
 
 model = joblib.load("customer_churn_model.pkl")
+
+# ✅ Exact 17 feature columns from training
+FEATURE_COLUMNS = [
+    'store_nbr', 'onpromotion', 'cluster', 'perishable',
+    'transactions', 'month', 'day', 'year', 'item_nbr',
+    'weekday', 'lag_1', 'lag_7', 'rolling_mean_7',
+    'rolling_mean_30', 'promo_days', 'avg_sales_promo', 'price_index'
+]
 
 st.sidebar.header("Instructions")
 st.sidebar.write("""
@@ -22,24 +29,25 @@ if uploaded_file:
     st.write("✅ Data preview:")
     st.dataframe(data.head())
 
-    # 🔧 Convert object columns to category codes (same as training)
-    for col in data.select_dtypes("object").columns:
-        data[col] = data[col].astype("category").cat.codes
+    # ✅ Filter columns to match training features
+    data = data[[col for col in FEATURE_COLUMNS if col in data.columns]]
 
-    # 🔧 Force all to numeric
-    data = data.apply(pd.to_numeric, errors="coerce").fillna(0)
+    # ✅ Fill missing columns if any
+    for col in FEATURE_COLUMNS:
+        if col not in data.columns:
+            data[col] = 0
 
-    # 🔧 Predict safely
-    try:
-        preds = model.predict(data)
-        data["Predicted_Churn"] = preds
-        st.subheader("🔮 Predictions (Top 20)")
-        st.dataframe(data.head(20))
+    # ✅ Reorder columns
+    data = data[FEATURE_COLUMNS]
 
-        csv = data.to_csv(index=False).encode("utf-8")
-        st.download_button("📥 Download predictions", csv, "predicted_churn.csv", "text/csv")
-    except Exception as e:
-        st.error("⚠️ Prediction failed — check input format.")
-        st.code(str(e))
+    # ✅ Predict safely
+    preds = model.predict(data)
+    data["Predicted_Churn"] = preds
+
+    st.subheader("🔮 Predictions (Top 20)")
+    st.dataframe(data.head(20))
+
+    csv = data.to_csv(index=False).encode('utf-8')
+    st.download_button("📥 Download predictions", csv, "predicted_churn.csv", "text/csv")
 else:
     st.info("Upload a CSV file to start prediction.")
