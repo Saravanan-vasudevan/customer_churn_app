@@ -224,6 +224,58 @@ if uploaded_file is not None:
             index=0
         )
         st.warning(f"**Action Plan:** {selected_suggestion}")
+
+                # -------------------------------
+        # 📊 ADVANCED STATISTICAL INSIGHTS + LEARNING LINKS
+        # -------------------------------
+        st.markdown("---")
+        st.markdown("## 🔍 Statistical Insights & Learning Resources")
+
+        st.write("Gain deeper understanding of churn behaviour through quick statistical summaries and curated resources.")
+
+        # 🧮 Basic statistical overview
+        st.subheader("📈 Descriptive Statistics")
+        with st.expander("View statistical summary of numeric features"):
+            st.write(data.describe().T.style.background_gradient(cmap='Blues'))
+
+        # 📊 Correlation matrix (basic insight)
+        st.subheader("📊 Feature Correlations with Predicted Churn")
+        numeric_cols = data.select_dtypes(include=np.number).columns.tolist()
+        if "Predicted_Churn_Prob" in numeric_cols:
+            correlations = data[numeric_cols].corr()["Predicted_Churn_Prob"].sort_values(ascending=False)
+            st.bar_chart(correlations.head(10))
+            st.caption("Top correlated features with churn probability (based on current dataset).")
+        else:
+            st.warning("Correlation data unavailable — ensure numeric features are present.")
+
+        # 🧠 Simple pseudo feature importance (SHAP-inspired)
+        st.subheader("💡 Top Predictive Features (Model Level)")
+        try:
+            importance = model.feature_importance()
+            feat_imp = pd.DataFrame({
+                "Feature": model.feature_name(),
+                "Importance": importance
+            }).sort_values("Importance", ascending=False).head(10)
+            st.bar_chart(feat_imp.set_index("Feature"))
+            st.caption("Top 10 features influencing churn prediction (based on LightGBM importance).")
+        except Exception:
+            st.warning("Feature importance not available for this model.")
+
+        # -------------------------------
+        # 🎓 KNOWLEDGE + RESOURCE LINKS
+        # -------------------------------
+        st.markdown("### 🎓 Learn More About Churn Prediction")
+        st.markdown("""
+        📘 **Recommended Articles & Tutorials**
+        - [🔗 Towards Data Science: Customer Churn Prediction using ML](https://towardsdatascience.com/predicting-customer-churn-with-machine-learning-dc9853fced3e)
+        - [📺 YouTube: Build a Churn Model End-to-End (Python)](https://www.youtube.com/watch?v=gcOKI2J3NyE)
+        - [💻 Kaggle Notebook: Telecom Churn Prediction (with Code)](https://www.kaggle.com/code/ashishpatel26/telecom-customer-churn-prediction)
+        - [🧠 Blog: 5 Strategies to Reduce Customer Churn](https://blog.hubspot.com/service/reduce-customer-churn)
+        - [🧩 GitHub Repo: Streamlit + ML Deployment Example](https://github.com/streamlit/example-app-ml-churn)
+        """)
+
+        st.success("💬 Explore these curated resources to understand churn modeling, feature impact, and deployment best practices.")
+
    
         # -------------------------------
         # 💾 DOWNLOAD
