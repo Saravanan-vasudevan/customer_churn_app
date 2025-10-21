@@ -103,13 +103,31 @@ if uploaded_file is not None:
     st.dataframe(data.head(), use_container_width=True)
 
     # -------------------------------
-    # 🧠 MAKE PREDICTIONS
+    # 🧠 MAKE PREDICTIONS (with column alignment)
     # -------------------------------
     try:
-        preds = model.predict(data)
-        data["Predicted_Churn"] = preds
+        # ✅ Load reference columns from model metadata if saved (or set manually)
+        expected_features = list(model.feature_name())
 
+        # ✅ Align incoming data to match training columns only
+        missing_cols = [col for col in expected_features if col not in data.columns]
+        extra_cols = [col for col in data.columns if col not in expected_features]
+
+        if extra_cols:
+            st.warning(f"⚠️ Ignoring {len(extra_cols)} extra columns not seen during training: {extra_cols}")
+
+        for col in missing_cols:
+            data[col] = 0  # fill missing with zero safely
+
+        # Keep only expected features in same order
+        data = data[expected_features]
+
+        # 🔮 Predict safely
+        preds = model.predict(data)
+
+        data["Predicted_Churn"] = preds
         churn_rate = np.mean(preds)
+
         st.markdown("---")
         st.markdown(f"<h2>📈 Overall Predicted Churn Rate: <span style='color:#00FFFF;'>{churn_rate:.2%}</span></h2>", unsafe_allow_html=True)
 
@@ -124,6 +142,7 @@ if uploaded_file is not None:
     except Exception as e:
         st.error("⚠️ Prediction failed — check input format or missing columns.")
         st.exception(e)
+
 
 else:
     st.info("💡 Upload a CSV file to start predictions.")
